@@ -1,6 +1,8 @@
 // arquivo de configuração do just para falar com TS
 
-const { resolve } = require("path");
+const {
+    resolve
+} = require("path");
 // busca o path para acessar os arquivos
 const root = resolve(__dirname);
 // busca o diretorio do arquivo
@@ -16,11 +18,18 @@ module.exports = {
     // caso exista uma configuração local 
     //  o nome do display será outro
     testMatch: ['<rootDir>/src/**/*.test.js'],
-    //
+    // Só vai dar match nos arquivos dentro da pasta apontada
+    // no caso dentro de /src/
     testEnvironment: "node",
+    // qual ambiente está rodando
     clearMocks: true,
+    // limpar os moxis por padrão
+    preset: "ts-jest",
+    // oque estamos usamos para rodar
     moduleNameMapper: {
-        '@src/(.*)': '<rootDir>/src/$1',
+        // poder usar os alias que fizemos
+        // para o setup da aplicação
+        '@src/(.*)': '<rootDir>/src/$1', 
         '@test/(.*)': '<rootDir>/test/$1',
     },
 };
