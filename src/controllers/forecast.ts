@@ -1,19 +1,18 @@
-import supertest from "supertest";
-// importa a ferramenta de teste para dentro da aplicação
+import {
+    Controller,
+    Get
+} from "@overnightjs/core";
+import {
+    Request,
+    Response
+} from "express";
 
-describe('Beah forecast functional tests', () => {
-    // função maior para teste
-    it('should return a forecast with a few times', async () => {
-        // it = isto 
-        // chama a funcition de teste
-        const {
-            body,
-            status
-        } = await global.testRequest.get('/forecast');
+@Controller('forecast')
+export class ForecastController {
 
-        expect(status).toBe(200);
-        // esperava( status ) ser 200
-        expect(body).toBe([{
+    @Get('')
+    public getForecastForLoggedUser(_: Request, res: Response): void {
+        res.send([{
             // esperava (corpo) ser esse array
             "time": "2020-04-26T00:00:00+00:00",
             "forecast": [{
@@ -46,6 +45,6 @@ describe('Beah forecast functional tests', () => {
                 "waveHeight": 0.46,
                 "windDirection": 310.48
             }]
-        }]);
-    });
-});
+        }])
+    };
+};
