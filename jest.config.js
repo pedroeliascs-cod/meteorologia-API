@@ -17,7 +17,7 @@ module.exports = {
     // executado, exemplo Esse é o arquivo global
     // caso exista uma configuração local 
     //  o nome do display será outro
-    testMatch: ['<rootDir>/src/**/*.test.js'],
+    testMatch: ['<rootDir>/src/**/*.test.ts'],
     // Só vai dar match nos arquivos dentro da pasta apontada
     // no caso dentro de /src/
     testEnvironment: "node",
