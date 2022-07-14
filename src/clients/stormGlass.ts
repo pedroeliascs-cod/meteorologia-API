@@ -1,6 +1,4 @@
 import { AxiosStatic } from 'axios';
-import { BlobOptions } from 'buffer';
-
 export interface StormGlassPointSource {
   // [key: string]
   // permite qualquer String sendo o "nome"
@@ -49,24 +47,26 @@ export class StormGlass {
     'swellDirection%2CswellHeight%2CswellPeriod%2CwaveDirection%2CwaveHeight%2CwindDirection%2CwindSpeed';
   // são os parametros passados para a api
 
-  readonly stormGlassAPISource = 'noaaa';
+  readonly stormGlassAPISource = 'noaa';
   // source passo para a api
 
   constructor(protected request: AxiosStatic) {}
   // contructor desse obj é passado o axiosStatic
 
-  public async fetchPoints(lat: number, lng: number): Promise<{}> {
-    const response = this.request.get<StormGlassForecastResponse>(
+  public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
+    const response = await this.request.get<StormGlassForecastResponse>(
       `https://api.stormglass.io/v2/weather/point?params=${this.stormGlassAPIParams}&source=${this.stormGlassAPISource}&lat=${lat}&lng=${lng}`
     );
     // contato com a API
+    return this.normalizeResponse(response.data)
   }
 
   private normalizeResponse(
     points: StormGlassForecastResponse
   ): ForecastPoint[] {
     return points.hours.filter(this.isValidPoint.bind(this)).map((point) => ({
-      // 
+      // faz a validação do point.hours passando o insValidPoint com o bind(this)
+      // e mapeando os valores
       swellDirection: point.swellDirection[this.stormGlassAPISource],
       swellHeight: point.swellHeight[this.stormGlassAPISource],
       swellPeriod: point.swellPeriod[this.stormGlassAPISource],
@@ -78,10 +78,16 @@ export class StormGlass {
     }));
   }
 
+
   private isValidPoint(point: Partial<StormGlassPoint>): Boolean {
+    // o parcial deixa todas as chaves {} como opcionais
+    // sendo assim nós forçando a validar todas elas abaixo
     return !!(
+      // o !! força o retorno de boolean
       point.time &&
+      // caso o point.time exista retorna true
       point.swellDirection?.[this.stormGlassAPISource] &&
+      // caso o swellDireciton[this.stormGlassAPISource]exista retorna true
       point.swellHeight?.[this.stormGlassAPISource] &&
       point.swellPeriod?.[this.stormGlassAPISource] &&
       point.waveDirection?.[this.stormGlassAPISource] &&
