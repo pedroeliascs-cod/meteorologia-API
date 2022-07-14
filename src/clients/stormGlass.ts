@@ -1,35 +1,93 @@
 import { AxiosStatic } from 'axios';
-
+import { BlobOptions } from 'buffer';
 
 export interface StormGlassPointSource {
-    [key: string]: number;
+  // [key: string]
+  // permite qualquer String sendo o "nome"
+  // do apontamento do obj
+  // "idade": 20,
+  //  o idade é a Key string
+  [key: string]: number;
 }
 
 export interface StormGlassPoint {
-    readonly time: String;
-    readonly waveHeight: StormGlassPointSource;
-    readonly waveDirection: StormGlassPointSource;
-    readonly swellDirection: StormGlassPointSource;
-    readonly swellHeight: StormGlassPointSource;
-    readonly swellPeriod: StormGlassPointSource;
-    readonly windDirection: StormGlassPointSource;
-    readonly windSpeed: StormGlassPointSource;
+  // esse é o padrão de dados que a API deve retornar
+  // será esse modelo será usado como lista
+  time: string;
+  readonly waveHeight: StormGlassPointSource;
+  readonly waveDirection: StormGlassPointSource;
+  readonly swellDirection: StormGlassPointSource;
+  readonly swellHeight: StormGlassPointSource;
+  readonly swellPeriod: StormGlassPointSource;
+  readonly windDirection: StormGlassPointSource;
+  readonly windSpeed: StormGlassPointSource;
 }
 
 export interface StormGlassForecastResponse {
-    hours: StormGlassPoint;
+  // a interface nada mais é que o formato do OBJ
+  // sendo o stormGlassForescastResponse
+  // uma lista de StormGlassPoint
+  // sendo setado a lista com o []
+  hours: StormGlassPoint[];
+}
+
+export interface ForecastPoint {
+  // essa interface vai ser utilizado
+  // para a listagem dos dados já tratados
+  time: string;
+  waveHeight: number;
+  waveDirection: number;
+  swellDirection: number;
+  swellHeight: number;
+  swellPeriod: number;
+  windDirection: number;
+  windSpeed: number;
 }
 
 export class StormGlass {
   readonly stormGlassAPIParams =
     'swellDirection%2CswellHeight%2CswellPeriod%2CwaveDirection%2CwaveHeight%2CwindDirection%2CwindSpeed';
-  readonly stormGlassAPIsource = 'noaaa';
+  // são os parametros passados para a api
+
+  readonly stormGlassAPISource = 'noaaa';
+  // source passo para a api
 
   constructor(protected request: AxiosStatic) {}
+  // contructor desse obj é passado o axiosStatic
 
   public async fetchPoints(lat: number, lng: number): Promise<{}> {
-    return this.request.get(
-      `https://api.stormglass.io/v2/weather/point?params=${this.stormGlassAPIParams}&source=${this.stormGlassAPIsource}&lat=${lat}&lng=${lng}`
+    const response = this.request.get<StormGlassForecastResponse>(
+      `https://api.stormglass.io/v2/weather/point?params=${this.stormGlassAPIParams}&source=${this.stormGlassAPISource}&lat=${lat}&lng=${lng}`
+    );
+    // contato com a API
+  }
+
+  private normalizeResponse(
+    points: StormGlassForecastResponse
+  ): ForecastPoint[] {
+    return points.hours.filter(this.isValidPoint.bind(this)).map((point) => ({
+      // 
+      swellDirection: point.swellDirection[this.stormGlassAPISource],
+      swellHeight: point.swellHeight[this.stormGlassAPISource],
+      swellPeriod: point.swellPeriod[this.stormGlassAPISource],
+      time: point.time,
+      waveDirection: point.waveDirection[this.stormGlassAPISource],
+      waveHeight: point.waveHeight[this.stormGlassAPISource],
+      windDirection: point.windDirection[this.stormGlassAPISource],
+      windSpeed: point.windSpeed[this.stormGlassAPISource],
+    }));
+  }
+
+  private isValidPoint(point: Partial<StormGlassPoint>): Boolean {
+    return !!(
+      point.time &&
+      point.swellDirection?.[this.stormGlassAPISource] &&
+      point.swellHeight?.[this.stormGlassAPISource] &&
+      point.swellPeriod?.[this.stormGlassAPISource] &&
+      point.waveDirection?.[this.stormGlassAPISource] &&
+      point.waveHeight?.[this.stormGlassAPISource] &&
+      point.windDirection?.[this.stormGlassAPISource] &&
+      point.windSpeed?.[this.stormGlassAPISource]
     );
   }
 }
