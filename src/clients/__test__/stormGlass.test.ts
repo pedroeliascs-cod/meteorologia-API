@@ -16,7 +16,7 @@ describe('StormGlass client', () => {
   // com as infere a typagem da variavel
   // tomar cuidado isso no sistema
   // usar somente no caso de teste
-  it('should return the normalized forecast fromt the stromGlass service', async () => {
+  it(' com os dados corretos sendo enviados está retornando os dados normalizados corretos támbem', async () => {
     const lat = 58.7984;
     const lng = 17.8081;
     // acima informações que vão ser utilizadas para o test
@@ -32,5 +32,65 @@ describe('StormGlass client', () => {
     // faz  a chamada que retorna o resultado simulado
     expect(responce).toEqual(stormGlassNormalized3hoursFixture);
     // caso seja verdeiro
+  });
+
+  it('deve excluir os data points incompletos', async () => {
+    const lat = 58.7984;
+    const lng = 17.8081;
+    // acima informações que vão ser utilizadas para o test
+
+    const incompleteResponse = {
+      hours: [
+        {
+          windDirection: {
+            noaa: 300,
+          },
+          time: '2020-04-26T00:00:00+00:00',
+        },
+      ],
+    };
+
+    mockedAxios.get.mockResolvedValue({ data: incompleteResponse });
+    // passa para o get dados incompletos
+
+    const stormGlass = new StormGlass(mockedAxios);
+    const responce = await stormGlass.fetchPoints(lat, lng);
+
+    expect(responce).toEqual([]);
+  });
+
+  it('deve retornar um erro generico quando a requisição falha antes de alçandar a api externa', async () => {
+    const lat = -33.792726;
+    const lng = 151.289824;
+
+    mockedAxios.get.mockRejectedValue({ message: 'Network error' });
+    // esperando o erro
+
+    const stormGlass = new StormGlass(mockedAxios);
+
+    await expect(stormGlass.fetchPoints(lat, lng)).rejects.toThrow(
+      // essa função espera que a fecthPoints seja rejeitada
+      // isso causando um erro que é capturado com toThrow
+      'Unexpected error when trying to communicate to StormGlass: Network Error'
+    );
+  });
+
+  it('deve pegar o StormGlassResponseError quando o serviço StormGlass Retornar com erro', async () => {
+    const lat = -33.792726;
+    const lng = 151.289824;
+
+    mockedAxios.get.mockRejectedValue({
+        response: {
+            status: 429,
+            data: { errors: ['Rate Limit reached']}
+        },
+    });
+
+    const stormGlass = new StormGlass(mockedAxios);
+
+    await expect(stormGlass.fetchPoints(lat, lng)).rejects.toThrow(
+        'Unexpected error returned by the StormGlass service: Error: {"errors":["Rate Limit reached"]} Code: 429'
+    )
+
   });
 });

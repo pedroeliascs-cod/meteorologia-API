@@ -1,4 +1,5 @@
-import { AxiosStatic } from 'axios';
+import { InternalError } from '@src/util/internal-error';
+import { AxiosError, AxiosStatic } from 'axios';
 export interface StormGlassPointSource {
   // [key: string]
   // permite qualquer String sendo o "nome"
@@ -42,6 +43,23 @@ export interface ForecastPoint {
   windSpeed: number;
 }
 
+export class ClientRequestError extends InternalError {
+  constructor(message: string) {
+    const internalMessage =
+      'Unexpected error when trying to communicate to StormGlass: Network Error';
+
+    super(`${internalMessage}: ${message}`);
+  }
+}
+
+export class StormGlassResponseError extends InternalError {
+  constructor(message: string) {
+    const internalMessage =
+      'Unexpected error returned by the StormGlass service';
+    super(`${internalMessage}: ${message}`);
+  }
+}
+
 export class StormGlass {
   readonly stormGlassAPIParams =
     'swellDirection%2CswellHeight%2CswellPeriod%2CwaveDirection%2CwaveHeight%2CwindDirection%2CwindSpeed';
@@ -54,11 +72,24 @@ export class StormGlass {
   // contructor desse obj é passado o axiosStatic
 
   public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
-    const response = await this.request.get<StormGlassForecastResponse>(
-      `https://api.stormglass.io/v2/weather/point?params=${this.stormGlassAPIParams}&source=${this.stormGlassAPISource}&lat=${lat}&lng=${lng}`
-    );
-    // contato com a API
-    return this.normalizeResponse(response.data)
+    try {
+      const response = await this.request.get<StormGlassForecastResponse>(
+        `https://api.stormglass.io/v2/weather/point?params=${this.stormGlassAPIParams}&source=${this.stormGlassAPISource}&lat=${lat}&lng=${lng}`,
+        {
+          headers: {
+            Authorization: 'fake-token',
+          },
+        }
+      );
+      // contato com a API
+      return this.normalizeResponse(response.data);
+    } catch (err: unknown) {
+      const AxiosError = (err as AxiosError)
+      if(AxiosError.response && AxiosError.response.status){
+        throw new StormGlassResponseError(AxiosError.message);
+      }
+      throw new ClientRequestError((AxiosError).message);
+    }
   }
 
   private normalizeResponse(
@@ -78,22 +109,23 @@ export class StormGlass {
     }));
   }
 
-
   private isValidPoint(point: Partial<StormGlassPoint>): Boolean {
     // o parcial deixa todas as chaves {} como opcionais
     // sendo assim nós forçando a validar todas elas abaixo
     return !!(
       // o !! força o retorno de boolean
-      point.time &&
-      // caso o point.time exista retorna true
-      point.swellDirection?.[this.stormGlassAPISource] &&
-      // caso o swellDireciton[this.stormGlassAPISource]exista retorna true
-      point.swellHeight?.[this.stormGlassAPISource] &&
-      point.swellPeriod?.[this.stormGlassAPISource] &&
-      point.waveDirection?.[this.stormGlassAPISource] &&
-      point.waveHeight?.[this.stormGlassAPISource] &&
-      point.windDirection?.[this.stormGlassAPISource] &&
-      point.windSpeed?.[this.stormGlassAPISource]
+      (
+        point.time &&
+        // caso o point.time exista retorna true
+        point.swellDirection?.[this.stormGlassAPISource] &&
+        // caso o swellDireciton[this.stormGlassAPISource]exista retorna true
+        point.swellHeight?.[this.stormGlassAPISource] &&
+        point.swellPeriod?.[this.stormGlassAPISource] &&
+        point.waveDirection?.[this.stormGlassAPISource] &&
+        point.waveHeight?.[this.stormGlassAPISource] &&
+        point.windDirection?.[this.stormGlassAPISource] &&
+        point.windSpeed?.[this.stormGlassAPISource]
+      )
     );
   }
 }
