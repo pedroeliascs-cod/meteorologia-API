@@ -60,13 +60,17 @@ export class Forecast {
 
   private mapForecastByTime(forecast: BeachForecast[]): TimeForcast[] {
     const mapForecastByTime: TimeForcast[] = [];  
+    // array que recebera as informações processadas
 
     for (const point of forecast) {
       const timePoint = mapForecastByTime.find((f) => f.time === point.time);
-
+      //  passa por todos os obj dentro de mapForecastByTime
+      // em busca de um time que bata como point.time
       if(timePoint){
+        // caso já exista 
         timePoint.forecast.push(point);
       }else{
+        // caso não exista
         mapForecastByTime.push({
           time: point.time,
           forecast: [point]
