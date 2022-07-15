@@ -77,11 +77,10 @@ export class StormGlass {
   readonly stormGlassAPISource = 'noaa';
   // source passo para a api
 
-  constructor(protected request: AxiosStatic) {}
-  // contructor desse obj é passado o axiosStatic
+  constructor(protected request = new HTTPUtil.Request()) {}
+  // contructor desse obj é passa do o axiosStatic
 
   public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
-    console.log(stormglassResourceConfig)
     try {
       const response = await this.request.get<StormGlassForecastResponse>(
         `${stormglassResourceConfig.get("apiUrl")}/weather/point?params=${
@@ -96,15 +95,18 @@ export class StormGlass {
       // contato com a API
       return this.normalizeResponse(response.data);
     } catch (err) {
-      const AxiosError = err as AxiosError;
-      if (AxiosError.response && AxiosError.response.status) {
+       //@Updated 2022 to support Error as unknown
+      //https://devblogs.microsoft.com/typescript/announcing-typescript-4-4/#use-unknown-catch-variables
+      if (err instanceof Error && HTTPUtil.Request.isRequestError(err)) {
+        const error = HTTPUtil.Request.extractErrorData(err);
         throw new StormGlassResponseError(
-          `Error: ${JSON.stringify(AxiosError.response.data)} Code: ${
-            AxiosError.response.status
-          }`
+          `Error: ${JSON.stringify(error.data)} Code: ${error.status}`
         );
       }
-      throw new ClientRequestError(AxiosError.message);
+      /**
+       * All the other errors will fallback to a generic client error
+       */
+      throw new ClientRequestError(JSON.stringify(err));
     }
   }
 

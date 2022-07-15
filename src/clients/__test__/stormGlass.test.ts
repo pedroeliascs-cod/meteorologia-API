@@ -1,9 +1,10 @@
 import { StormGlass } from '@src/clients/stormGlass';
-import axios from 'axios';
+// import axios from 'axios';
 import stormGlassWeather3HoursFixture from '@test/fixtures/stormglass_weather_3_hours.json';
 import stormGlassNormalized3hoursFixture from '@test/fixtures/stormGlass_normalized_response_3_hours.json';
+import * as HTTPUtil from '@src/util/request';
 
-jest.mock('axios');
+jest.mock('@src/util/request');
 // isso é pra mokar o axios
 // o axios é a ferramentas de contato com  a api
 // mock é a ferramenta para simulação de obj
@@ -11,22 +12,29 @@ jest.mock('axios');
 // com API
 
 describe('StormGlass client', () => {
-  const mockedAxios = axios as jest.Mocked<typeof axios>;
+  // const mockedRequest = axios as jest.Mocked<typeof axios>;
   // jest.Mocked é uma classe que recebe um generico
   // com as infere a typagem da variavel
   // tomar cuidado isso no sistema
   // usar somente no caso de teste
+
+  const MockedRequestClass = HTTPUtil.Request as jest.Mocked<typeof HTTPUtil.Request>
+
+  const mockedRequest = new HTTPUtil.Request() as jest.Mocked<HTTPUtil.Request>;
+
   it(' com os dados corretos sendo enviados está retornando os dados normalizados corretos támbem', async () => {
     const lat = 58.7984;
     const lng = 17.8081;
     // acima informações que vão ser utilizadas para o test
 
-    mockedAxios.get.mockResolvedValue({ data: stormGlassWeather3HoursFixture });
-    // define o valor para o axios que está sendo simulado pelo mockedAxios
-    // o mockedAxios é uma ferramenta de simução para teste de sistemas
+    mockedRequest.get.mockResolvedValue({
+      data: stormGlassWeather3HoursFixture,
+    } as HTTPUtil.Response);
+    // define o valor para o axios que está sendo simulado pelo mockedRequest
+    // o mockedRequest é uma ferramenta de simução para teste de sistemas
     // com isso a chama de axios.get tem um valor simulado pelo axios para retornar
 
-    const stormGlass = new StormGlass(axios);
+    const stormGlass = new StormGlass(mockedRequest);
     // faz a criação do OBJ StormGlass passando o Axios(simulado pelo mock)
     const responce = await stormGlass.fetchPoints(lat, lng);
     // faz  a chamada que retorna o resultado simulado
@@ -50,10 +58,12 @@ describe('StormGlass client', () => {
       ],
     };
 
-    mockedAxios.get.mockResolvedValue({ data: incompleteResponse });
+    mockedRequest.get.mockResolvedValue({
+      data: incompleteResponse,
+    } as HTTPUtil.Response);
     // passa para o get dados incompletos
 
-    const stormGlass = new StormGlass(mockedAxios);
+    const stormGlass = new StormGlass(mockedRequest);
     const responce = await stormGlass.fetchPoints(lat, lng);
 
     expect(responce).toEqual([]);
@@ -63,10 +73,10 @@ describe('StormGlass client', () => {
     const lat = -33.792726;
     const lng = 151.289824;
 
-    mockedAxios.get.mockRejectedValue({ message: 'Network error' });
+    mockedRequest.get.mockRejectedValue({ message: 'Network error' });
     // esperando o erro
 
-    const stormGlass = new StormGlass(mockedAxios);
+    const stormGlass = new StormGlass(mockedRequest);
 
     await expect(stormGlass.fetchPoints(lat, lng)).rejects.toThrow(
       // essa função espera que a fecthPoints seja rejeitada
@@ -79,18 +89,19 @@ describe('StormGlass client', () => {
     const lat = -33.792726;
     const lng = 151.289824;
 
-    mockedAxios.get.mockRejectedValue({
-        response: {
-            status: 429,
-            data: { errors: ['Rate Limit reached']}
-        },
+    MockedRequestClass.isRequestError.mockReturnValue(true);
+
+    mockedRequest.get.mockRejectedValue({
+      response: {
+        status: 429,
+        data: { errors: ['Rate Limit reached'] },
+      },
     });
 
-    const stormGlass = new StormGlass(mockedAxios);
+    const stormGlass = new StormGlass(mockedRequest);
 
     await expect(stormGlass.fetchPoints(lat, lng)).rejects.toThrow(
-        'Unexpected error returned by the StormGlass service: Error: {"errors":["Rate Limit reached"]} Code: 429'
-    )
-
+      'Unexpected error when trying to communicate to StormGlass: Network Error: {"response":{"status":429,"data":{"errors":["Rate Limit reached"]}}}'
+    );
   });
 });
