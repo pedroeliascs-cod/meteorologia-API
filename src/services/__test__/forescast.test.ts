@@ -3,14 +3,14 @@ import stormGlassNormalizedResponseFixture from '@test/fixtures/stormglass_norma
 import { Beach, BeachPosition, Forecast } from '../forecast';
 
 jest.mock('@src/clients/stormGlass');
-// faz a mocagem 
+// faz a mocagem
 
 describe('Forecast Service', () => {
   it('should return the forecast for a list of beaches', async () => {
     StormGlass.prototype.fetchPoints = jest
       .fn()
       .mockResolvedValue(stormGlassNormalizedResponseFixture);
-      
+
     const beaches: Beach[] = [
       {
         lat: -33.792726,
