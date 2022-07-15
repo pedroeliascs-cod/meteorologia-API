@@ -20,7 +20,7 @@ describe('Forecast Service', () => {
         user: 'some-id',
       },
     ];
-
+    
     const expectedResponse = [
       {
         time: '2020-04-26T00:00:00+00:00',
