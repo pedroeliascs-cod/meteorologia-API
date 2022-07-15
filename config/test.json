@@ -2,7 +2,7 @@
   "App": {
     "resources": {
       "StormGlass": {
-        "apiToken": "do-not-hard-code"
+        "apiToken": "do-not-hard-test"
       }
     }
   }

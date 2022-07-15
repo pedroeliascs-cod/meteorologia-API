@@ -1,6 +1,7 @@
 import { InternalError } from '@src/util/internal-error';
-import { AxiosError, AxiosStatic } from 'axios';
+// import { AxiosError, AxiosStatic } from 'axios';
 import config, { IConfig } from 'config';
+import * as HTTPUtil from '@src/util/request';
 
 export interface StormGlassPointSource {
   // [key: string]
@@ -80,6 +81,7 @@ export class StormGlass {
   // contructor desse obj é passado o axiosStatic
 
   public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
+    console.log(stormglassResourceConfig)
     try {
       const response = await this.request.get<StormGlassForecastResponse>(
         `${stormglassResourceConfig.get("apiUrl")}/weather/point?params=${
