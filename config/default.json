@@ -1,5 +1,8 @@
 {
   "App": {
+    "database": {
+      "mongoUrl": "mongodb+srv://teste:teste@cluster0.0f8egfz.mongodb.net/?retryWrites=true&w=majority"
+    },
     "resources": {
       "StormGlass": {
         "apiUrl": "https://api.stormglass.io/v2",
