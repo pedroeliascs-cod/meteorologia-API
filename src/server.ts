@@ -17,7 +17,6 @@ import * as database from '@src/database';
 export class SetupServer extends Server {
   constructor(private port = 3000) {
     // constructor do setup de configuração do Server
-
     super();
   }
 
@@ -46,7 +45,7 @@ export class SetupServer extends Server {
     this.addControllers([forecastController, beachesController]);
 
   }
-
+ 
   private async dataBaseSetup(): Promise<void> {
     await database.connect();
   }

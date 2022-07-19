@@ -8,7 +8,6 @@ describe("beaches testes funcionais", () => {
                 name: 'Manly',
                 position: 'E'
             };
-
             const response = await global.testRequest.post("/beaches").send(newBeach);
 
             expect(response.status).toEqual(201);
