@@ -1,7 +1,22 @@
+import { Beach, BeachPosition } from '@src/models/beach';
 import supertest from 'supertest';
 // importa a ferramenta de teste para dentro da aplicação
 
 describe('Beah forecast functional tests', () => {
+
+  beforeEach(async () => {
+    await Beach.deleteMany({});
+    const defaultBeach = {
+      lat: -33.792726,
+      lng: 151.289824,
+      name: "Manly",
+      position: BeachPosition.E
+    }
+
+    const beach = new Beach(defaultBeach);
+    await beach.save();
+
+  })
   // função maior para teste
   it('should return a forecast with a few times', async () => {
     // it = isto
