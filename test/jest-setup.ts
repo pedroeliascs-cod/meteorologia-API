@@ -1,14 +1,20 @@
 import { SetupServer } from "@src/server";
 import supertest from "supertest";
 
-beforeAll(() => {
+
+let server: SetupServer;
+
+beforeAll(async () => {
   // a chamada antes de tudo acontecer
-  const server = new SetupServer();
+  server = new SetupServer();
   // cria um novo OBJ setupServer
   // que é a configuração do servidor
-  server.init();
+  await server.init();
   // inicia o servidor
   global.testRequest = supertest(server.getApp());
   // coloca valor no testRequest
   // sendo ele o app() do servidor
 });
+
+
+afterAll(async() => await server.close());
