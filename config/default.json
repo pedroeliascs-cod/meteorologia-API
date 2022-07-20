@@ -1,5 +1,6 @@
 {
   "App": {
+    "port": 3000,
     "database": {
       "mongoUrl": "mongodb+srv://teste:teste@cluster0.0f8egfz.mongodb.net/?retryWrites=true&w=majority"
     },
