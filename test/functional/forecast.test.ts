@@ -48,4 +48,29 @@ describe('Beah forecast functional tests', () => {
     // esperava( status ) ser 200
     expect(body).toEqual(apiForecastResponse1BeachFixture);
   });
+
+  it('deve retornar um erro 500 quando algo der errado durante o processo', async () => {
+    nock('https://api.stormglass.io:443', {
+      // intercepta o requisição e seta outro retorno para a mesma
+      encodedQueryParams: true,
+      reqheaders: {
+        Authorization: (): boolean => true,
+      },
+    })
+      .defaultReplyHeaders({ 'acess-control-allow-origin': '*' })
+      // controle dos cores
+      .get('/v2/weather/point')
+      .query({
+        lat: '-33.792726',
+        lng: '151.289824',
+        params: /(.*)/,
+        source: 'noaa',
+      })
+      .replyWithError('Something went wrong');
+      
+      const {status} = await global.testRequest.get("/forecast");
+
+      expect(status).toBe(500);
+
+    });
 });
