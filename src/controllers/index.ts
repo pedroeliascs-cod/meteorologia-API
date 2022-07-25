@@ -3,7 +3,7 @@ import { Response } from 'express';
 import mongoose from 'mongoose';
 
 export abstract class BaseController {
-  protected sendCreatedUpdateErrorResponse(
+  protected sendCreateUpdateErrorResponse(
     res: Response,
     error: unknown
   ): void {

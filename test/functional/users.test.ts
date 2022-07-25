@@ -1,10 +1,11 @@
 import { User } from '@src/models/user';
+import Authservice from '@src/services/auth';
 
 describe('user funcional testes', () => {
   beforeEach(async () => {
     await User.deleteMany({});
   });
-  describe('Quando criar um novo usuario', () => {
+  describe('Quando criar um novo usuario com a senha cripografada', () => {
     it('deve criar um novo usuario', async () => {
       const newUser = {
         name: 'John Doe',
@@ -14,7 +15,15 @@ describe('user funcional testes', () => {
 
       const response = await global.testRequest.post('/users').send(newUser);
       expect(response.status).toBe(201);
-      expect(response.body).toEqual(expect.objectContaining(newUser));
+      await expect(
+        Authservice.comparePasswords(newUser.password, response.body.password)
+      ).resolves.toBeTruthy();
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          ...newUser,
+          ...{ password: expect.any(String) },
+        })
+      );
     });
 
     it('deve retornar um erro 422 quando acontece um erro na validação ', async () => {
@@ -48,5 +57,24 @@ describe('user funcional testes', () => {
         error: 'User validation failed: email: already exists in the database.',
       });
     });
+  });
+
+  describe('Quando o usuario autenticar', () => {
+    it.only('deve gerar um token para um usuario valido', async () => {
+      const newUser = {
+        name: 'John Doe',
+        email: 'john@mail.com',
+        password: '1234',
+      };
+
+      await new User(newUser).save();
+      const response = await global.testRequest
+        .post('/users/authenticate')
+        .send({ email: newUser.email, password: newUser.password });
+    
+      expect(response.body).toEqual(
+        expect.objectContaining({token: expect.any(String)})
+      )
+      });
   });
 });

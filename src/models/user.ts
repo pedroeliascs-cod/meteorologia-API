@@ -1,4 +1,5 @@
 import mongoose, { Document } from 'mongoose';
+import Authservice from '@src/services/auth';
 
 export interface User {
   _id?: string;
@@ -40,5 +41,19 @@ schema.path('email').validate(
 );
 // trás o erro da informação duplicada para a camada do mongoose
 // fazendo ele parar de retornar um erro diretamenta do MongoDB
+
+
+schema.pre<UserModel>('save', async function (): Promise<void> {
+  if (!this.password || !this.isModified('password')) {
+    return;
+  }
+
+  try {
+    const hashedPassword = await Authservice.hashPassword(this.password);
+    this.password = hashedPassword;
+  } catch (err) {
+    console.error(`Erro no hash do password do usuario ${this.name}`);
+  }
+});
 
 export const User = mongoose.model<UserModel>('User', schema);

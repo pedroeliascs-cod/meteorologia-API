@@ -12,7 +12,12 @@ export class UserController extends BaseController {
       const newUser = await user.save();
       res.status(201).send(newUser);
     } catch (error) {
-        this.sendCreatedUpdateErrorResponse(res, error);
+        this.sendCreateUpdateErrorResponse(res, error);
     }
+  }
+
+  @Post('authenticate')
+  public async authenticate(req: Request, res: Response): Promise<void>{
+    
   }
 }
