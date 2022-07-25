@@ -34,6 +34,7 @@ describe('user funcional testes', () => {
 
     it('deve retornar 409 quando o email já existir', async () => {
       const newUser = {
+        name: 'John Doe',
         email: 'john@mail.com',
         password: '1234',
       };
@@ -42,7 +43,7 @@ describe('user funcional testes', () => {
       const response = await global.testRequest.post('/users').send(newUser);
 
       expect(response.status).toBe(409);
-      expect(response.body.error).toBe({
+      expect(response.body).toEqual({
         code: 409,
         error: 'User validation failed: email: already exists in the database.',
       });
